@@ -1,0 +1,187 @@
+package ${package.ServiceImpl};
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+import ${package.Entity}.${entity};
+import ${package.Model}.${model};
+
+import ${package.Mapper}.${table.mapperName};
+import ${package.Service}.${table.serviceName};
+
+import com.boot.common.base.PageReq;
+import com.boot.common.base.PageResp;
+import com.boot.common.base.AjaxResult;
+import com.boot.utils.ObjectUtil;
+import com.boot.common.base.BusinessException;
+
+import ${superServiceImplClassPackage};
+import com.baomidou.mybatisplus.mapper.Wrapper;
+import com.baomidou.mybatisplus.toolkit.IdWorker;
+import com.baomidou.mybatisplus.mapper.EntityWrapper;
+
+import org.springframework.transaction.annotation.Transactional;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.ibatis.session.RowBounds;
+import org.springframework.stereotype.Service;
+
+/**
+ *
+ * @author ${author}
+ * @since ${date}
+ */
+@Service
+public class ${table.serviceImplName} extends ${superServiceImplClass}<${table.mapperName}, ${entity}> implements ${table.serviceName} {
+		
+	/**
+	 *  List<${entity}> to List<${model}>
+	 *  @author ${author}
+	 */
+	private List<${model}> copyList(List<${entity}> list){
+		List<${model}> models = new ArrayList<${model}>();
+		if(list!=null){
+			for(${entity} entity:list){
+				${model} model = new ${model}();
+				ObjectUtil.copy(entity,model);
+				models.add(model);
+			}
+		}
+		return models;
+	}
+	
+	/**
+	 * 分页入参构造器
+	 * @param pageReq
+	 * @return EntityWrapper
+	 * @author ${author}
+	 */
+	private EntityWrapper<${entity}> createWrapper(PageReq<${model}> pageReq){
+		return createWrapper(pageReq.getModel());
+	}
+	
+	/**
+	 * 入参构造器
+	 * @param ${model}
+	 * @return EntityWrapper
+	 * @author ${author}
+	 */
+	private EntityWrapper<${entity}> createWrapper(${model} model){
+		EntityWrapper<${entity}> wrapper = new EntityWrapper<${entity}>();
+		if(model!=null){
+			//默认构造入参
+			${entity} entity = new ${entity}();
+			ObjectUtil.copy(model,entity);
+			wrapper.setEntity(entity); 						
+			//按需求构造你的入参。。。。。
+			
+		}
+		return wrapper;
+	}
+	
+	/**
+	 * 
+	 * @author ${author}
+	 */
+	@Override
+	public PageResp<${model}> findPage(PageReq<${model}> pageReq) {
+		// TODO Auto-generated method stub
+		PageResp<${model}> pageResp = new PageResp<${model}> ();
+		//构造条件
+		EntityWrapper<${entity}> wrapper = createWrapper(pageReq);		
+		try {
+			//统计总数
+			Integer totalRows = this.baseMapper.selectCount(wrapper);
+			//排序	
+			if(StringUtils.isNotBlank(pageReq.getOrderBy())){
+				wrapper.orderBy(pageReq.getOrderBy(), pageReq.getIsAsc());
+			}
+			//查询
+			List<${model}> list = findPage(wrapper, pageReq.getStart(), pageReq.getPageSize());			
+			//构造返回		
+			pageResp.setAjaxResult(AjaxResult.SUCCESS);	
+			pageResp.setResults(list, pageReq.getPageNo(), pageReq.getPageSize(), totalRows);
+		}catch(BusinessException e) {
+			throw new BusinessException(e);
+		}
+		return pageResp;
+	}
+	
+	/**
+	 * 
+	 * @author l2iu
+	 */	
+	@Override
+	public List<${model}> findList(${model} model) {		
+		List<${entity}> list = baseMapper.selectList(createWrapper(model));
+		return this.copyList(list);			
+	}
+	
+    /**
+	 * 
+	 * @author ${author}
+	 */
+	@Override
+	public List<${model}> findPage(Wrapper<${entity}> wrapper,int start,int limit) {
+		// TODO Auto-generated method stub
+		List<${entity}> list = baseMapper.selectPage(new RowBounds(start, limit), wrapper);
+		return this.copyList(list);
+	}
+
+	/**
+	 * 
+	 * @author ${author}
+	 */
+	@Transactional(rollbackFor = Exception.class)	
+	@Override
+	public boolean insert(${model} model){
+		// TODO Auto-generated method stub			
+		#if(${keyPropertyName})
+	    if(null == model.getId()){
+		   model.setId(IdWorker.getIdStr());
+		}
+		#end
+		${entity} entity = new ${entity}();
+		ObjectUtil.copy(model,entity);
+		return this.insert(entity);			
+	}
+
+	/**
+	 * 
+	 * @author ${author}
+	 */
+	@Transactional(rollbackFor = Exception.class)	
+	@Override
+	public boolean update(${model} model){
+		// TODO Auto-generated method stub		
+		${entity} entity = new ${entity}();
+		ObjectUtil.copy(model,entity);
+		return entity.updateById();			
+	}
+
+	/**
+	 * 
+	 * @author ${author}
+	 */
+	@Transactional(rollbackFor = Exception.class)	
+	@Override
+	public boolean delById(Serializable id){
+		// TODO Auto-generated method stub
+		return this.deleteById(id);		
+	}
+
+	/**
+	 * 
+	 * @author ${author}
+	 */	
+	@Override
+	public ${model} findById(Serializable id){
+		// TODO Auto-generated method stub		
+		${model} model = new ${model}();
+		${entity} entity = this.selectById(id);
+		ObjectUtil.copy(entity,model);
+		return model;
+	}
+	
+}
